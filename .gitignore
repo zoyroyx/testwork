@@ -20,3 +20,6 @@ htmlcov/
 
 # Node.js
 node_modules/
+
+# Local agent skills
+.agents/
