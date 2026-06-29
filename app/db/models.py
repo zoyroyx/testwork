@@ -1,10 +1,13 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum as PyEnum
 from typing import List, Optional
 from sqlalchemy import String, Enum, ForeignKey, JSON, DateTime, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class RequestStatus(str, PyEnum):
     PENDING = "PENDING"
@@ -32,8 +35,8 @@ class ApprovalRequest(Base):
         default=RequestStatus.PENDING
     )
     idempotency_key: Mapped[str] = mapped_column(String(255), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
 
     logs: Mapped[List["ApprovalLog"]] = relationship(
         back_populates="request",
@@ -55,6 +58,6 @@ class ApprovalLog(Base):
     actor_user_id: Mapped[str] = mapped_column(String(255))
     action: Mapped[ActionType] = mapped_column(Enum(ActionType, name="actiontype", native_enum=False))
     comment_or_reason: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     request: Mapped[ApprovalRequest] = relationship(back_populates="logs")
